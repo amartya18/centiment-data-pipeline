@@ -1,1 +1,1 @@
-print("Hello Lambda!")
+print("Hello Codepipeline!")
