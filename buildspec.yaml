@@ -1,0 +1,12 @@
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - echo Moving to instance service folder
+      - cd $(echo ${CODEBUILD_INITIATOR} | cut -d'/' -f2)
+
+artifacts:
+  files:
+    - $CODEBUILD_INITIATOR/*
+
