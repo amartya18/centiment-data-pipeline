@@ -10,5 +10,5 @@ phases:
 artifacts:
   files:
     - '**/*'
-    - base-directory: $(echo ${CODEBUILD_INITIATOR} | cut -d'/' -f2)
+    base-directory: $(echo ${CODEBUILD_INITIATOR} | cut -d'/' -f2)
 
