@@ -3,8 +3,9 @@ version: 0.2
 phases:
   build:
     commands:
-      - echo Moving to instance service folder
+      - echo Building docker image on `date`
       - cd $(echo ${CODEBUILD_INITIATOR} | cut -d'/' -f2)
+      - echo pwd
 
 artifacts:
   files:
