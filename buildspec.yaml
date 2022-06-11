@@ -9,7 +9,6 @@ phases:
 
 artifacts:
   files:
-    - '**/*'
-  base-directory: twitter-stream-service
+    - $(echo ${CODEBUILD_INITIATOR} | cut -d'/' -f2)/*
   discard-paths: no
 
