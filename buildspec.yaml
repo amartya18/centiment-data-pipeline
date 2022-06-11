@@ -5,9 +5,10 @@ phases:
     commands:
       - echo Building docker image on `date`
       - cd $(echo ${CODEBUILD_INITIATOR} | cut -d'/' -f2)
-      - echo pwd
+      - pwd
 
 artifacts:
   files:
     - $CODEBUILD_INITIATOR/*
+    - $(echo ${CODEBUILD_INITIATOR} | cut -d'/' -f2)/*
 
