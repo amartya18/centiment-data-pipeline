@@ -8,3 +8,5 @@ source /home/ec2-user/twitter-stream-service/environment/bin/activate
 
 echo Installing python packages 
 sudo /home/ec2-user/twitter-stream-service/environment/bin/pip install -r /home/ec2-user/twitter-stream-service/requirements.txt
+
+deactivate
