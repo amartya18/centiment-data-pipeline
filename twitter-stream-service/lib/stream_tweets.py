@@ -1,20 +1,18 @@
 # import xmlrpc.client
-from dotenv import load_dotenv
 import tweepy
 import json
-import os
+
+from lib.helper import ssm_get_parameters
 
 # rpc = xmlrpc.client.ServerProxy("http://127.0.0.1:8000")
 
-load_dotenv()
-
 class TwitterAuth():
     ''' Twitter Authentication'''
-    consumer_key = os.environ['api_key']
-    consumer_secret = os.environ['api_key_secret']
-    access_token = os.environ['access_token']
-    access_token_secret = os.environ['access_token_secret']
-    bearer_token = os.environ['bearer_token']
+    consumer_key = ssm_get_parameters('twitter_api_key')
+    consumer_secret = ssm_get_parameters('twitter_api_key_secret')
+    access_token = ssm_get_parameters('twitter_access_token')
+    access_token_secret = ssm_get_parameters('twitter_access_token_secret')
+    bearer_token = ssm_get_parameters('twitter_bearer_token')
 
 class ListenerStreamTweets(tweepy.StreamingClient):
     limit = None
