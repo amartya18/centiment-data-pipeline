@@ -4,7 +4,7 @@ if __name__ == "__main__":
 
     streamTweets = TwitterStreamTweets(
                 debug_print = False,
-                limit = 17
+                limit = 15
             )
 
     cryptocurrencies = [
