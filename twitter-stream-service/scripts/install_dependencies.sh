@@ -1,3 +1,3 @@
 #!/bin/bash
 echo Installing python packages 
-pip install -r requirements.txt
+~/.local/bin/pip install -r requirements.txt
