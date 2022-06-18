@@ -49,7 +49,7 @@ class ListenerStreamTweets(tweepy.StreamingClient):
         print("tweet {} :\n".format(self.amount_of_tweets))
         print('{}:\n{}\n'.format(data['includes']['users'][0]['username'], data['data']['text']))
         
-    def on_closed(self):
+    def on_closed(self, response):
         print("\nTwitter Stream connection closed! :(\n")
 
     def on_connect(self):
