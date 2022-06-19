@@ -5,10 +5,10 @@ import os
 load_dotenv()
 
 class Btmtr:
-    BOTOMETER_LITE_THRESHOLD = 0.75
-    BOTOMETER_REGULAR_THRESHOLD = 0.90
+    # cap threshold
+    BOTOMETER_REGULAR_THRESHOLD = 0.95
 
-    def __init__(self) -> None:
+    def __init__(self):
         rapidapi_key = os.environ.get("RAPIDAPI_KEY")
 
         twitter_app_auth = {
@@ -37,7 +37,10 @@ class Btmtr:
         user_id = tweet["includes"]["users"][0]["id"]
         response = self.bom_regular.check_account(user_id)
 
-        print("PREDICTION:\n")
-        print(response)
-        print("\n")
+        english_cap = response["cap"]["english"]
+        is_bot = True if english_cap < self.BOTOMETER_REGULAR_THRESHOLD else False
+        print("english cap score:", english_cap, "bot:", is_bot)
+
+        # bot binary classification based on: https://botometer.osome.iu.edu/faq
+        return is_bot
 

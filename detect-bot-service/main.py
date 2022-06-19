@@ -13,7 +13,7 @@ class RequestHandler(SimpleXMLRPCRequestHandler):
 def main(tweet):
     tweets_predictor.predict_bot_tweets(tweet)
 
-with SimpleXMLRPCServer(("127.0.0.1", 8000),
+with SimpleXMLRPCServer(("127.0.0.1", 5001),
         requestHandler=RequestHandler, allow_none=True) as server:
     server.register_introspection_functions()
 
