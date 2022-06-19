@@ -12,8 +12,8 @@ class TweetsPredictor:
         self.bot_redis = BotRedis()
 
     def predict_bot_tweets(self, tweet):
-        if self.bot_redis.exists_account(tweet):
-            if self.bot_redis.get_account(tweet):
+        if self.bot_redis.account_exists(tweet):
+            if self.bot_redis.account_isnot_bot(tweet):
                 # TODO: call rabbitmq
                 pass
         elif self.botometer_requests < self.BOTOMETER_REQUEST_LIMIT: 

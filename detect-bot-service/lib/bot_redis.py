@@ -1,3 +1,4 @@
+from imp import is_builtin
 from redis.cluster import RedisCluster
 from lib.helper import ssm_get_parameters
 
@@ -17,18 +18,18 @@ class BotRedis:
     def __get_tweet_user_id__(self, tweet):
         return tweet["includes"]["users"][0]["id"]
 
-    def get_account(self, tweet):
+    def account_exists(self, tweet):
         user_id = self.__get_tweet_user_id__(tweet)
 
         # if account exists in redis already
-        account_exist = bool(self.rds.exists(user_id)) 
-        return True if account_exist else False
+        return bool(self.rds.exists(user_id)) 
     
     def set_account(self, tweet, value):
+        # value true == account is bot
         user_id = self.__get_tweet_user_id__(tweet)
-        print("redis user stored:", user_id, int(value))
         self.rds.set(user_id, int(value))
 
-    def exists_account(self, tweet):
+    def account_isnot_bot(self, tweet):
         user_id = self.__get_tweet_user_id__(tweet)
-        return self.rds.exists(user_id)
+        is_bot = bool(int(self.rds.get(user_id)))
+        return not is_bot
