@@ -57,9 +57,9 @@ class ListenerStreamTweets(tweepy.StreamingClient):
 class TwitterStreamTweets():
     def __init__(self, rpc_url, debug_print, limit = 5):
         self.twitterAuth = TwitterAuth()
+        self.rpc_url = rpc_url
         self.debug_print = debug_print
         self.limit = limit
-        self.rpc_url = rpc_url
 
     def __delete_stream_rules__(self, stream_tweets):
         tweepy_streamrules = stream_tweets.get_rules().data
@@ -72,9 +72,9 @@ class TwitterStreamTweets():
     def stream_tweets(self, keywords):
         stream_tweets = ListenerStreamTweets(
             self.twitterAuth.bearer_token,
+            self.rpc_url,
             self.debug_print,
             self.limit,
-            self.rpc_url,
         )
 
         keywords_string = ' '.join(keywords)
