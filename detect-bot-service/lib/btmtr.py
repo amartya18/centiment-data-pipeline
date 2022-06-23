@@ -1,22 +1,21 @@
 import botometer
-from dotenv import load_dotenv
 import os
 
-load_dotenv()
+from lib.helper import ssm_get_parameters
 
 class Btmtr:
     # overall display score threshold
     BOTOMETER_REGULAR_THRESHOLD = 2
 
     def __init__(self):
-        rapidapi_key = os.environ.get("RAPIDAPI_KEY")
+        rapidapi_key = ssm_get_parameters("btmtr_rapidapi_key")
 
         twitter_app_auth = {
-                "consumer_key": os.environ.get("CONSUMER_KEY"),
-                "consumer_secret": os.environ.get("CONSUMER_SECRET"),
-                "access_token": os.environ.get("ACCESS_TOKEN"),
-                "access_token_secret": os.environ.get("ACCESS_SECRET"),
-                }
+            "consumer_key": ssm_get_parameters('twitter_api_key'),
+            "consumer_secret": ssm_get_parameters('twitter_api_key_secret'),
+            "access_token": ssm_get_parameters('twitter_access_token'),
+            "access_token_secret": ssm_get_parameters('twitter_access_token_secret'),
+        }
 
         self.bom_regular = botometer.Botometer(wait_on_ratelimit=True, rapidapi_key=rapidapi_key, **twitter_app_auth)
         self.bom_lite = botometer.BotometerLite(rapidapi_key=rapidapi_key, **twitter_app_auth)
