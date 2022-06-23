@@ -1,10 +1,8 @@
-# import xmlrpc.client
 import tweepy
 import json
+import xmlrpc.client
 
 from lib.helper import ssm_get_parameters
-
-# rpc = xmlrpc.client.ServerProxy("http://127.0.0.1:8000")
 
 class TwitterAuth():
     ''' Twitter Authentication'''
@@ -20,8 +18,9 @@ class ListenerStreamTweets(tweepy.StreamingClient):
     debug_print = False
     viable_sources = ['Twitter for iPhone', 'Twitter for Android', 'Twitter Web App']
 
-    def __init__(self, bearer_token, debug_print, limit):
+    def __init__(self, bearer_token, rpc_url, debug_print, limit):
         super().__init__(bearer_token)
+        self.rpc = xmlrpc.client.ServerProxy(rpc_url)
         self.debug_print = debug_print
         self.limit = limit
 
@@ -32,8 +31,8 @@ class ListenerStreamTweets(tweepy.StreamingClient):
             self.print_data(data)
         else: # call detect bot rpc
             if (self.__filter_source__(data)):
-                # rpc.process_tweet(data)
                 self.print_data(data)
+                self.rpc.process_tweet(data)
 
         if self.limit: # limit amount of tweets streamed
             self.amount_of_tweets += 1
@@ -56,10 +55,11 @@ class ListenerStreamTweets(tweepy.StreamingClient):
         print("\nTwitter Stream connection established! :)\n")
 
 class TwitterStreamTweets():
-    def __init__(self, debug_print, limit = 5):
+    def __init__(self, rpc_url, debug_print, limit = 5):
         self.twitterAuth = TwitterAuth()
         self.debug_print = debug_print
         self.limit = limit
+        self.rpc_url = rpc_url
 
     def __delete_stream_rules__(self, stream_tweets):
         tweepy_streamrules = stream_tweets.get_rules().data
@@ -74,6 +74,7 @@ class TwitterStreamTweets():
             self.twitterAuth.bearer_token,
             self.debug_print,
             self.limit,
+            self.rpc_url,
         )
 
         keywords_string = ' '.join(keywords)
