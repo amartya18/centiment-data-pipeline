@@ -1,11 +1,13 @@
-import botometer
 import os
+import botometer
+from ratelimit import limits
 
 from lib.helper import ssm_get_parameters
 
 class Btmtr:
     # overall display score threshold
     BOTOMETER_REGULAR_THRESHOLD = 2
+    SIXTY_MINUTES = 3600 # temporary will reevaluate
 
     def __init__(self):
         rapidapi_key = ssm_get_parameters("btmtr_rapidapi_key")
@@ -28,10 +30,9 @@ class Btmtr:
 
         response = self.bom_lite.check_accounts_from_user_ids(user_ids_list)
 
-        print("PREDICTION:\n")
-        print(response)
-        print("\n")
+        return response
 
+    @limits(calls = 708, period = SIXTY_MINUTES)
     def botometer_regular(self, tweet):
         user_id = tweet["includes"]["users"][0]["id"]
         response = self.bom_regular.check_account(user_id)

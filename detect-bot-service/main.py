@@ -15,10 +15,13 @@ class RequestHandler(SimpleXMLRPCRequestHandler):
 def main(tweet):
     tweets_predictor.predict_bot_tweets(tweet)
 
+
 with SimpleXMLRPCServer((ip_addr, 5001),
         requestHandler=RequestHandler, allow_none=True) as server:
     server.register_introspection_functions()
 
     server.register_function(main, "process_tweet")
+
+    print("xml-rpc started :)")
 
     server.serve_forever()
