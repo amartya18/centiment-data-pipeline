@@ -31,7 +31,7 @@ class ListenerStreamTweets(tweepy.StreamingClient):
             self.print_data(data)
         else: # call detect bot rpc
             if (self.__filter_source__(data)):
-                self.print_data(data)
+                # self.print_data(data)
                 self.rpc.process_tweet(data)
 
         if self.limit: # limit amount of tweets streamed
