@@ -1,4 +1,5 @@
 import boto3
+import re
 from subprocess import check_output
 
 
@@ -12,7 +13,8 @@ def ssm_get_parameters(key):
 
 def get_ip_addr():
     try:
-        # linux only
-        return check_output(['hostname', '--all-ip-addresses']) 
+        # linux only, remove newline and whitespace
+        ip_addr = check_output(['hostname', '--all-ip-addresses']) 
+        return re.sub("\s+", "", ip_addr.decode("UTF-8"))
     except:
         return "127.0.0.1"
