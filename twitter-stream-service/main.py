@@ -19,15 +19,4 @@ if __name__ == "__main__":
                 "DOGE",
             ]
 
-    query = ""
-    for coin in cryptocurrencies:
-        if query:
-            query += " OR \"${}\"".format(coin)
-        else:
-            query += "\"${}\"".format(coin)
-
-    streamTweets.stream_tweets([
-        "({} OR bitcoin OR ethereum OR XRP OR solana OR cardano OR dogecoin)".format(query),
-        "-giveaway -give -free -trader -win -winner",
-        "lang:en -is:retweet -is:reply -has:links",
-    ])
+    streamTweets.stream_tweets(cryptocurrencies)

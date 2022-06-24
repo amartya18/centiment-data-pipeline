@@ -2,7 +2,7 @@ import tweepy
 import json
 import xmlrpc.client
 
-from lib.helper import ssm_get_parameters
+from lib.helper import ssm_get_parameters, get_tweepy_filter
 
 class TwitterAuth():
     ''' Twitter Authentication'''
@@ -30,12 +30,12 @@ class ListenerStreamTweets(tweepy.StreamingClient):
         if self.debug_print:
             self.print_data(data)
         else: # call detect bot rpc
-            if (self.__filter_source__(data)):
-                # self.print_data(data)
-                try:
+            try:
+                if (self.__filter_source__(data)):
+                    # self.print_data(data)
                     self.rpc.process_tweet(data)
-                except Exception as err:
-                    print("Failed to send tweet with error:", err)
+            except Exception as err:
+                print("Failed to send tweet with error:", err)
 
         if self.limit: # limit amount of tweets streamed
             self.amount_of_tweets += 1
@@ -72,7 +72,7 @@ class TwitterStreamTweets():
                 stream_tweets.delete_rules(rule.id)
 
 
-    def stream_tweets(self, keywords):
+    def stream_tweets(self, cryptos):
         stream_tweets = ListenerStreamTweets(
             self.twitterAuth.bearer_token,
             self.rpc_url,
@@ -80,15 +80,15 @@ class TwitterStreamTweets():
             self.limit,
         )
 
-        keywords_string = ' '.join(keywords)
-
         self.__delete_stream_rules__(stream_tweets)
 
-        stream_tweets.add_rules(
-            [
-                tweepy.StreamRule(value = keywords_string, tag = 'cryptocurrency tweets'),
-            ]
-        )
+        tweepy_rules = []
+        for crypto in cryptos:
+            tweepy_rules.append(
+                tweepy.StreamRule(value = get_tweepy_filter(crypto), tag = crypto)
+            )
+
+        stream_tweets.add_rules(tweepy_rules)
 
         print("Twitter rule used: ", stream_tweets.get_rules())
 
