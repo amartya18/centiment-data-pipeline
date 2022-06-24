@@ -8,8 +8,21 @@ class BasicPikaClient:
         ssl_context.set_ciphers('ECDHE+AESGCM:!ECDSA')
 
         url = f"amqps://{rabbitmq_user}:{rabbitmq_password}@{rabbitmq_broker_id}.mq.{region}.amazonaws.com:5671"
-        parameters = pika.URLParameters(url)
-        parameters.ssl_options = pika.SSLOptions(context=ssl_context)
+        self.parameters = pika.URLParameters(url)
+        self.parameters.ssl_options = pika.SSLOptions(context=ssl_context)
 
+        self.reconnect(self.parameters)
+
+    def reconnect(self, parameters):
         self.connection = pika.BlockingConnection(parameters)
         self.channel = self.connection.channel()
+
+    def check_connection_and_channel(self):
+        # source: https://stackoverflow.com/questions/56322608/allow-rabbitmq-and-pika-maintain-the-conection-always-open
+        if not self.connection or self.connection.is_closed:
+            print("connection closed...")
+            self.reconnect(self.parameters)
+        elif self.channel.is_closed:
+            print("channel closed...")
+            self.channel = self.connection.channel()
+            # self.channel.exchange_declare(exchange = "", exchange_type = "direct")
