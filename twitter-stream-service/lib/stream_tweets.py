@@ -32,7 +32,10 @@ class ListenerStreamTweets(tweepy.StreamingClient):
         else: # call detect bot rpc
             if (self.__filter_source__(data)):
                 # self.print_data(data)
-                self.rpc.process_tweet(data)
+                try:
+                    self.rpc.process_tweet(data)
+                except Exception as err:
+                    print("Failed to send tweet with error:", err)
 
         if self.limit: # limit amount of tweets streamed
             self.amount_of_tweets += 1
