@@ -7,7 +7,7 @@ from lib.pika_producer import PikaProducer
 
 class TweetsPredictor:
     # not using botometer lite because accuracy disapointing
-    PIKA_QUEUE = "twitter_stream_test"
+    PIKA_QUEUE = "twitter_stream_ttl"
 
     def __init__(self):
         self.btmtr = Btmtr()
