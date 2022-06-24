@@ -11,11 +11,15 @@ class PikaProducer(BasicPikaClient):
         if type(body) is dict:
             body = pickle.dumps(body)
 
-        self.channel.basic_publish(
-            exchange=exchange,
-            routing_key=routing_key,
-            body=body
-        )
+        # TODO: check if alot of exception occurs
+        try:
+            self.channel.basic_publish(
+                exchange=exchange,
+                routing_key=routing_key,
+                body=body
+            )
+        except Exception as err:
+            print("Failed to publish tweet with error:", err)
 
     def close(self):
         self.channel.close()

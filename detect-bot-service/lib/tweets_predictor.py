@@ -31,10 +31,16 @@ class TweetsPredictor:
                         body = tweet,
                     )
             else:
-            # call botometer
                 try:
-                    is_tweet_bot = self.btmtr.botometer_regular(tweet)
+                    is_tweet_bot = self.btmtr.botometer_regular(tweet) # call botometer
                     self.bot_redis.set_account(tweet, is_tweet_bot)
+                    if not is_tweet_bot:
+                        # call rabbitmq
+                        self.pika_producer.send_message(
+                            exchange = "",
+                            routing_key = self.PIKA_QUEUE,
+                            body = tweet,
+                        )
                 except RateLimitException:
                     # when ratelimit for the hour hits
                     # TODO: call rabbitmq

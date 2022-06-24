@@ -37,6 +37,7 @@ class Btmtr:
         user_id = tweet["includes"]["users"][0]["id"]
         response = self.bom_regular.check_account(user_id)
 
+        # true indicated account is bot
         overall_display_score = response["display_scores"]["english"]["overall"]
         is_bot = True if overall_display_score > self.BOTOMETER_REGULAR_THRESHOLD else False
 
