@@ -1,4 +1,4 @@
-import pickle
+import json
 
 from lib.basic_pika_client import BasicPikaClient
 
@@ -14,7 +14,7 @@ class PikaProducer(BasicPikaClient):
         self.check_connection_and_channel()
 
         if type(body) is dict or list:
-            body = pickle.dumps(body)
+            body = json.dumps(body)
 
         try:
             # TODO: check if alot of exception occurs
