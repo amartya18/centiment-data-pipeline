@@ -1,15 +1,16 @@
-import schedule
+import json
 import time
+import schedule
 
-def job():
-    print("1 minute func triggered")
+from pycoingecko import CoinGeckoAPI
 
-def job_with_argument(name):
-    print(f"30 seconds func triggered: {name}")
+cg = CoinGeckoAPI()
+
+def get_btc_price():
+    result = cg.get_price(ids='bitcoin', vs_currencies='usd')
+    print(json.dumps(result))
 
 schedule.every(1).minutes.do(job)
-
-schedule.every(30).seconds.do(job_with_argument, name="test")
 
 while True:
     schedule.run_pending()
