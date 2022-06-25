@@ -15,6 +15,7 @@ class CryptoData:
             ssm_get_parameters("rabbitmq_broker_region"),
         )
         self.pika_producer.declare_queue(self.PIKA_QUEUE)
+        cw.api_key = ssm_get_parameters("cryptowatch_public_key")
 
 
     def get_cryptocurrency_price(self, crypto):
