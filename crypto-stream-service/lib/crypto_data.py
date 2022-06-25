@@ -1,3 +1,4 @@
+import datetime
 import cryptowatch as cw
 
 from lib.helper import ssm_get_parameters
@@ -34,15 +35,18 @@ class CryptoData:
 
     def get_all_cryptocurrency_price(self, cryptocurrencies):
         try:
+            payload = []
             for crypto in cryptocurrencies:
                 data = self.get_cryptocurrency_price(crypto)
-                print(data)
+                payload.append(data)
 
-                self.pika_producer.send_message(
-                    exchange = "",
-                    routing_key = self.PIKA_QUEUE,
-                    body = data,
-                )
+            print(datetime.datetime.now(), payload)
+
+            self.pika_producer.send_message(
+                exchange = "",
+                routing_key = self.PIKA_QUEUE,
+                body = payload,
+            )
         except:
             # not sure if this is the right way to close the connection
             self.pika_producer.close()
