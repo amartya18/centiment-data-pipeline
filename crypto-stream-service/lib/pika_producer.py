@@ -13,7 +13,7 @@ class PikaProducer(BasicPikaClient):
     def send_message(self, exchange, routing_key, body):
         self.check_connection_and_channel()
 
-        if type(body) is dict:
+        if type(body) is dict or list:
             body = pickle.dumps(body)
 
         try:
