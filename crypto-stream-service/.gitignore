@@ -1,0 +1,7 @@
+.DS_Store
+.env
+environment/
+__pycache__/
+lib/__pycache__/
+*.pyc
+test.py
