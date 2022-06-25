@@ -1,16 +1,21 @@
-import json
 import time
 import schedule
 
-from pycoingecko import CoinGeckoAPI
+from lib.crypto_data import CryptoData
 
-cg = CoinGeckoAPI()
+crypto_data = CryptoData()
 
-def get_btc_price():
-    result = cg.get_price(ids='bitcoin', vs_currencies='usd')
-    print(json.dumps(result))
+cryptocurrencies = [
+    "BTC",
+    "ETH",
+    "BNB",
+    "XRP",
+    "SOL",
+    "ADA",
+    "DOGE",
+]
 
-schedule.every(1).minutes.do(job)
+schedule.every(1).minutes.do(crypto_data.get_all_cryptocurrency_price, cryptocurrencies = cryptocurrencies)
 
 while True:
     schedule.run_pending()
