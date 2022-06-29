@@ -33,11 +33,21 @@ class InfluxdbConnector:
                     .field("volume", item["volume"])
             )
 
-        print("INFLUXDB WRITE -",datetime.datetime.now())
+        print("INFLUXDB WRITE - OHLC:", datetime.datetime.now())
         self.insert_data(data_points)
 
-    def insert_tweet(self):
-        pass
+    def insert_tweet(self, tweet):
+        point = (
+            Point("tweet_sentiment")
+                .tag("ticker", tweet["matching_rules"][0]["tag"])
+                .field("tweet", tweet["data"]["text"])
+                .field("sentiment", tweet["data"]["sentiment"])
+                .field("user_id", tweet["includes"]["users"][0]["id"])
+                .field("username", tweet["includes"]["users"][0]["username"])
+        )
+
+        print("INFLUXDB WRITE - SENTIMENT:", datetime.datetime.now())
+        self.insert_data(point)
 
     def insert_data(self, point):
         write_api = self.client.write_api(write_options = ASYNCHRONOUS)
