@@ -18,17 +18,17 @@ class BasicPikaClient:
     def reconnect(self, parameters, exchange, queue):
         self.connection = pika.BlockingConnection(parameters)
         self.channel = self.connection.channel()
-        # change to pubsub
-        self.channel.exchange_declare(exchange = exchange, exchange_type = "fanout")
 
         # pass None to queue to not bind queue
         if queue and self.args:
+            # normal queue
             self.channel.queue_declare(queue = queue, arguments = self.args)
         else:
+            # pubsub
+            self.channel.exchange_declare(exchange = exchange, exchange_type = "fanout")
             self.channel.queue_declare(queue = queue, exclusive = True)
             self.channel.queue_bind(exchange = exchange, queue = queue)
 
-    # currently unused
     def check_connection_and_channel(self, exchange, queue):
         # source: https://stackoverflow.com/questions/56322608/allow-rabbitmq-and-pika-maintain-the-conection-always-open
         if not self.connection or self.connection.is_closed:
@@ -37,5 +37,6 @@ class BasicPikaClient:
         elif self.channel.is_closed:
             print("channel closed...")
             self.channel = self.connection.channel()
-            # change to pubsub
-            self.channel.exchange_declare(exchange = exchange, exchange_type = "fanout")
+            if not self.args:
+                # pubsub
+                self.channel.exchange_declare(exchange = exchange, exchange_type = "fanout")
