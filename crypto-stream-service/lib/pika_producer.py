@@ -3,24 +3,16 @@ import json
 from lib.basic_pika_client import BasicPikaClient
 
 class PikaProducer(BasicPikaClient):
-    def declare_queue(self, queue_name):
-        print(f"Trying to declare queue {queue_name}...")
-        self.channel.queue_declare(
-            queue = queue_name,
-            arguments = { "x-message-ttl": 9000 }
-        )
-
-    def send_message(self, exchange, routing_key, body):
-        self.check_connection_and_channel()
+    def send_message(self, exchange, body):
+        self.check_connection_and_channel(exchange = exchange)
 
         if type(body) is dict or list:
             body = json.dumps(body)
 
         try:
-            # TODO: check if alot of exception occurs
             self.channel.basic_publish(
                 exchange = exchange,
-                routing_key = routing_key,
+                routing_key = "",
                 body = body
             )
         except Exception as err:

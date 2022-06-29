@@ -5,7 +5,7 @@ from lib.helper import ssm_get_parameters
 from lib.pika_producer import PikaProducer
 
 class CryptoData:
-    PIKA_QUEUE = "crypto_stream_ttl"
+    EXCHANGE = "ohlc"
 
     def __init__(self):
         self.pika_producer = PikaProducer(
@@ -13,8 +13,8 @@ class CryptoData:
             ssm_get_parameters("rabbitmq_user_username"),
             ssm_get_parameters("rabbitmq_user_password"),
             ssm_get_parameters("rabbitmq_broker_region"),
+            exchange = "ohlc"
         )
-        self.pika_producer.declare_queue(self.PIKA_QUEUE)
         cw.api_key = ssm_get_parameters("cryptowatch_public_key")
 
 
@@ -44,8 +44,7 @@ class CryptoData:
             print(datetime.datetime.now(), payload)
 
             self.pika_producer.send_message(
-                exchange = "",
-                routing_key = self.PIKA_QUEUE,
+                exchange = self.EXCHANGE,
                 body = payload,
             )
         except:
