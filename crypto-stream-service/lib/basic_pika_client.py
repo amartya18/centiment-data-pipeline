@@ -18,7 +18,6 @@ class BasicPikaClient:
         self.channel = self.connection.channel()
         # change to pubsub
         self.channel.exchange_declare(exchange = exchange, exchange_type = "fanout")
-        print("AAA")
 
     def check_connection_and_channel(self, exchange):
         # source: https://stackoverflow.com/questions/56322608/allow-rabbitmq-and-pika-maintain-the-conection-always-open

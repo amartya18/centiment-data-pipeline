@@ -15,7 +15,7 @@ cryptocurrencies = [
     "DOGE",
 ]
 
-schedule.every(1).minutes.do(crypto_data.get_all_cryptocurrency_price, cryptocurrencies = cryptocurrencies)
+schedule.every().minute.at(":00").do(crypto_data.get_all_cryptocurrency_price, cryptocurrencies = cryptocurrencies)
 
 while True:
     schedule.run_pending()
