@@ -21,6 +21,7 @@ if __name__ == "__main__":
         ssm_get_parameters("rabbitmq_broker_region"),
         exchange = "ohlc",
         queue = "ohlc-consumer",
+        args = None,
     )
 
     # temporarily test
