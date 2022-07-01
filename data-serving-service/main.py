@@ -26,7 +26,7 @@ class Ticker(str, Enum):
     SOL = "SOL"
     BNB = "BNB"
     DOGE = "DOGE"
-    XRP = "DOGE"
+    XRP = "XRP"
 
 @app.get("/candlestick")
 async def candlestick(
