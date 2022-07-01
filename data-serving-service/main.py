@@ -1,12 +1,15 @@
-from enum import Enum
 from fastapi import FastAPI
+from pydantic import BaseModel
+from datetime import datetime, timedelta
+from enum import Enum
 
 from lib.influxdb_connector import InfluxdbConnector
-from datetime import datetime, timedelta
+from lib.vader_sentiment import VaderSentiment
 
 app = FastAPI()
 
 influxdb = InfluxdbConnector()
+vader_sentiment = VaderSentiment()
 
 @app.get("/")
 async def home():
@@ -180,5 +183,16 @@ async def coin_sentiment_comparison(
                 "tweet_sentiment": item["_value"]
             }
             res.append(new_item)
+
+    return { "payload" : res }
+
+class TwitteSentimentTestText(BaseModel):
+    text: str
+
+@app.post("/twitter-sentiment-test")
+async def twitter_sentiment_test(
+    text: TwitteSentimentTestText
+):
+    res = vader_sentiment.get_polarity(text.text)
 
     return { "payload" : res }
