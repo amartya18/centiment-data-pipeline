@@ -138,13 +138,47 @@ async def tweet_volume_and_sentiment(
 
     res = []
     for item in data[0].records:
+        if item["_value_mean"] >= 45 and item["_value_mean"] <= 55:
+            tweet_sentiment = "neutral"
+        elif item["_value_mean"] < 45:
+            tweet_sentiment = "negative"
+        elif item["_value_mean"] > 55:
+            tweet_sentiment = "positive"
+
         new_item = {
             "ticker": item["ticker"],
             "time": item["_time"],
             "tweet_volume": item["_value_count"],
-            "tweet_sentiment": item["_value_mean"],
+            "tweet_sentiment": {
+                "score": item["_value_mean"],
+                "polarity": tweet_sentiment,
+            }
         }
         res.append(new_item)
 
+    return { "payload" : res }
+
+@app.get("/coin-sentiment-comparison")
+async def coin_sentiment_comparison(
+    relative_time: RelativeTime = RelativeTime.SEVEN_DAYS,
+):
+
+    query = f' from(bucket: "centiment-bucket-test")\
+	|> range(start: -{relative_time})\
+    |> filter(fn: (r) => r["_measurement"] == "tweet_sentiment")\
+    |> filter(fn: (r) => r["_field"] == "sentiment")\
+    |> mean()'
+
+    data = influxdb.query_data(query)
+
+    res = []
+    for table in data:
+        for item in table.records:
+            print(item)
+            new_item = {
+                "ticker": item["ticker"],
+                "tweet_sentiment": item["_value"]
+            }
+            res.append(new_item)
 
     return { "payload" : res }
