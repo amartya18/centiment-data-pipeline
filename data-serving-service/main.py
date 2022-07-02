@@ -478,3 +478,59 @@ async def twitter_fear_greed(
         res.append(new_item)
 
     return { "payload": res }
+
+@app.get("/tweet-trending-coins")
+async def tweet_trending_coins():
+    query = f'''
+        from(bucket: "centiment-bucket-test")
+            |> range(start: -8d, stop: -1d)
+            |> filter(fn: (r) => r["_measurement"] == "tweet_sentiment")
+            |> filter(fn: (r) => r["_field"] == "sentiment")
+            |> aggregateWindow(every: 1d, fn: count)
+            |> mean()
+    '''
+
+    data_comparison = influxdb.query_data(query)
+
+    tweet_volume_comparison = []
+    for table in data_comparison:
+        for item in table.records:
+            new_item = {
+                "ticker": item["ticker"],
+                "tweet_volume": item["_value"]
+            }
+            tweet_volume_comparison.append(new_item)
+
+    query = f'''
+        from(bucket: "centiment-bucket-test")
+            |> range(start: -1d)
+            |> filter(fn: (r) => r["_measurement"] == "tweet_sentiment")
+            |> filter(fn: (r) => r["_field"] == "sentiment")
+            |> count()
+    '''
+
+    data = influxdb.query_data(query)
+
+    tweet_volume= []
+    for table in data:
+        for item in table.records:
+            new_item = {
+                "ticker": item["ticker"],
+                "tweet_volume": item["_value"]
+            }
+            tweet_volume.append(new_item)
+
+    combined_tweet_volume = []
+    for tweet_today in tweet_volume:
+        for tweet_comparison in tweet_volume_comparison:
+            if tweet_today["ticker"] == tweet_comparison["ticker"]:
+                combined_tweet_volume.append({
+                    "ticker": tweet_today["ticker"],
+                    "tweet_volume_now": int(tweet_today["tweet_volume"]),
+                    "tweet_volume_before": int(tweet_comparison["tweet_volume"]),
+                    "percentage": int((tweet_today["tweet_volume"] - tweet_comparison["tweet_volume"]) * 100 / tweet_comparison["tweet_volume"]),
+                })
+
+    res = sorted(combined_tweet_volume, key = lambda x: x["percentage"], reverse = True)[:-4]
+
+    return { "payload": res }
