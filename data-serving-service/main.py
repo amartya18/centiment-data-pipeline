@@ -102,13 +102,44 @@ async def candlestick_relative(
     elif relative_time == RelativeTime.ONE_MONTH:
         granularity = TimeGranularity.MONTH
 
-    query = f' from(bucket: "centiment-bucket-test")\
-	|> range(start: -{relative_time})\
-    |> filter(fn: (r) => r["_measurement"] == "ohlc")\
-    |> filter(fn: (r) => r["_field"] == "close_price" or r["_field"] == "high_price" or r["_field"] == "low_price" or r["_field"] == "open_price")\
-    |> filter(fn: (r) => r["ticker"] == "{ticker}")\
-    |> aggregateWindow(every: {granularity}, fn: mean)\
-    |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")'
+    query = f''' 
+        data = from(bucket: "centiment-bucket-test")
+            |> range(start: -{relative_time})
+            |> filter(fn: (r) => r["_measurement"] == "ohlc")
+            |> filter(fn: (r) => r["ticker"] == "{ticker}")
+
+            open = data 
+                |> filter(fn: (r) => r["_field"] == "open_price")
+                |> aggregateWindow(every: {granularity}, fn: first)
+
+            close = data 
+                |> filter(fn: (r) => r["_field"] == "close_price")
+                |> aggregateWindow(every: {granularity}, fn: last)
+
+            high = data 
+                |> filter(fn: (r) => r["_field"] == "high_price")
+                |> aggregateWindow(every: {granularity}, fn: max)
+
+            low = data 
+                |> filter(fn: (r) => r["_field"] == "low_price")
+                |> aggregateWindow(every: {granularity}, fn: min)
+            
+            first_join = join(
+                tables: {{open:open, close:close}},
+                on: ["_start", "_stop", "_time", "_measurement", "ticker"],
+            )
+            first_join
+            second_join = join(
+                tables: {{high:high, low:low}},
+                on: ["_start", "_stop", "_time", "_measurement", "ticker"],
+            )
+
+            join(
+                tables: {{first:first_join, second:second_join}},
+                on: ["_start", "_stop", "_time", "_measurement", "ticker"],
+            )
+    '''
+
 
     data = influxdb.query_data(query)
 
@@ -117,10 +148,10 @@ async def candlestick_relative(
         new_item = {
             "ticker": item["ticker"],
             "time": item["_time"],
-            "low_price": item["low_price"],
-            "open_price": item["open_price"],
-            "close_price": item["close_price"],
-            "high_price": item["high_price"]
+            "low_price": item["_value_low"],
+            "open_price": item["_value_open"],
+            "close_price": item["_value_close"],
+            "high_price": item["_value_high"]
         }
         res.append(new_item)
 
