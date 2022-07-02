@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 from enum import Enum
@@ -7,6 +9,19 @@ from lib.influxdb_connector import InfluxdbConnector
 from lib.vader_sentiment import VaderSentiment
 
 app = FastAPI()
+
+origins = [
+    "http://localhost:3000",
+    "https://centiment.marcantonioapp.com/",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 influxdb = InfluxdbConnector()
 vader_sentiment = VaderSentiment()
