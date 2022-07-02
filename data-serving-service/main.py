@@ -412,21 +412,18 @@ async def coin_general_information(
 
     data = influxdb.query_data(query)
 
-    res = []
-    for item in data[0].records:
-        new_item = {
-            "ticker": ticker,
-            "coin_price": round(item["_value_after_trade_price"], 3),
-            "coin_volume": round(item["_value_after_trade_volume"], 2),
-            "tweet_count": item["_value_after_tweet_count"],
-            "tweet_sentiment": round(item["_value_after_tweet_sentiment"], 2),
-            "coin_price_percentage": round(item["_value_trade_price"], 2),
-            "coin_volume_percentage": round(item["_value_trade_volume"], 2),
-            "tweet_count_percentage": round(item["_value_tweet_count"], 2),
-            "tweet_sentiment_percentage": round(item["_value_tweet_sentiment"], 2),
-        }
-        res.append(new_item)
-
+    item = data[0].records[0]
+    res = {
+        "ticker": ticker,
+        "coin_price": round(item["_value_after_trade_price"], 3),
+        "coin_volume": round(item["_value_after_trade_volume"], 2),
+        "tweet_count": item["_value_after_tweet_count"],
+        "tweet_sentiment": round(item["_value_after_tweet_sentiment"], 2),
+        "coin_price_percentage": round(item["_value_trade_price"], 2),
+        "coin_volume_percentage": round(item["_value_trade_volume"], 2),
+        "tweet_count_percentage": round(item["_value_tweet_count"], 2),
+        "tweet_sentiment_percentage": round(item["_value_tweet_sentiment"], 2),
+    }
 
     return { "payload": res }
 
