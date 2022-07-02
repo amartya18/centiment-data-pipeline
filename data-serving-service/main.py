@@ -10,14 +10,9 @@ from lib.vader_sentiment import VaderSentiment
 
 app = FastAPI()
 
-origins = [
-    "http://localhost:3000",
-    "https://centiment.marcantonioapp.com/",
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins="*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -98,7 +93,7 @@ async def candlestick_relative(
     # granularity based on time_relative
     granularity = TimeGranularity.HOUR
     if relative_time == RelativeTime.ONE_DAY:
-        granularity = TimeGranularity.FIVE_MINUTE
+        granularity = TimeGranularity.MINUTE
     elif relative_time == RelativeTime.ONE_MONTH:
         granularity = TimeGranularity.MONTH
 
