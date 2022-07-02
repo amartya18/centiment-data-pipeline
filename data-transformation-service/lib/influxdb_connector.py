@@ -41,9 +41,10 @@ class InfluxdbConnector:
             Point("tweet_sentiment")
                 .tag("ticker", tweet["matching_rules"][0]["tag"])
                 .field("tweet", tweet["data"]["text"])
+                .field("tweet_id", tweet["data"]["id"])
                 .field("sentiment", tweet["data"]["sentiment"])
-                .field("user_id", tweet["includes"]["users"][0]["id"])
                 .field("username", tweet["includes"]["users"][0]["username"])
+                .field("name", tweet["includes"]["users"][0]["name"])
         )
 
         print("INFLUXDB WRITE - SENTIMENT:", datetime.datetime.now())
