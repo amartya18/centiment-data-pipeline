@@ -290,3 +290,116 @@ async def tweet_trade_correlation(
 
 
     return { "payload": res }
+
+@app.get("/coin-general-information")
+async def coin_general_information(
+    ticker: Ticker = Ticker.BTC,
+):
+
+    query = f'''
+        price_after = from(bucket: "centiment-bucket-test")
+            |> range(start: -1d)
+            |> filter(fn: (r) => r["_measurement"] == "ohlc")
+            |> filter(fn: (r) => r["_field"] == "open_price")
+            |> filter(fn: (r) => r["ticker"] == "{ticker}")
+            |> last()
+        price_before = from(bucket: "centiment-bucket-test")
+            |> range(start: -2d, stop: -1d)
+            |> filter(fn: (r) => r["_measurement"] == "ohlc")
+            |> filter(fn: (r) => r["_field"] == "open_price")
+            |> filter(fn: (r) => r["ticker"] == "{ticker}")
+            |> last()
+        trade_price = join(
+                tables: {{after:price_after, before:price_before}},
+                on: ["_field", "ticker"],
+            )
+                |> map(fn: (r) => ({{r with _value: (r._value_after - r._value_before) * 100.0 / r._value_before}}))
+
+        volume_after = from(bucket: "centiment-bucket-test")
+            |> range(start: -1d)
+            |> filter(fn: (r) => r["_measurement"] == "ohlc")
+            |> filter(fn: (r) => r["_field"] == "volume")
+            |> filter(fn: (r) => r["ticker"] == "{ticker}")
+            |> sum()
+        volume_before = from(bucket: "centiment-bucket-test")
+            |> range(start: -2d, stop: -1d)
+            |> filter(fn: (r) => r["_measurement"] == "ohlc")
+            |> filter(fn: (r) => r["_field"] == "volume")
+            |> filter(fn: (r) => r["ticker"] == "{ticker}")
+            |> sum()
+        trade_volume = join(
+            tables: {{after:volume_after, before:volume_before}},
+            on: ["_field", "ticker"],
+        )
+
+            |> map(fn: (r) => ({{r with _value: (r._value_after - r._value_before) * 100.0 / r._value_before}}))
+        sentiment_before = from(bucket: "centiment-bucket-test")
+            |> range(start: -1d)
+            |> filter(fn: (r) => r["_measurement"] == "tweet_sentiment")
+            |> filter(fn: (r) => r["_field"] == "sentiment")
+            |> filter(fn: (r) => r["ticker"] == "{ticker}")
+            |> mean()
+        sentiment_after = from(bucket: "centiment-bucket-test")
+            |> range(start: -2d, stop: -1d)
+            |> filter(fn: (r) => r["_measurement"] == "tweet_sentiment")
+            |> filter(fn: (r) => r["_field"] == "sentiment")
+            |> filter(fn: (r) => r["ticker"] == "{ticker}")
+            |> mean()
+        tweet_sentiment = join(
+            tables: {{after:sentiment_after, before:sentiment_before}},
+            on: ["_field", "ticker"],
+        )
+
+            |> map(fn: (r) => ({{r with _value: (r._value_after - r._value_before) * 100.0 / r._value_before}}))
+        count_before = from(bucket: "centiment-bucket-test")
+            |> range(start: -1d)
+            |> filter(fn: (r) => r["_measurement"] == "tweet_sentiment")
+            |> filter(fn: (r) => r["_field"] == "sentiment")
+            |> filter(fn: (r) => r["ticker"] == "{ticker}")
+            |> count()
+        count_after = from(bucket: "centiment-bucket-test")
+            |> range(start: -2d, stop: -1d)
+            |> filter(fn: (r) => r["_measurement"] == "tweet_sentiment")
+            |> filter(fn: (r) => r["_field"] == "sentiment")
+            |> filter(fn: (r) => r["ticker"] == "{ticker}")
+            |> count()
+        tweet_count = join(
+            tables: {{after:count_after, before:count_before}},
+            on: ["_field", "ticker"],
+        )
+            |> map(fn: (r) => ({{r with _value: (float(v: r._value_after) - float(v: r._value_before)) * 100.0 / float(v: r._value_before)}}))
+
+        first_join = join(
+            tables: {{trade_price:trade_price, trade_volume:trade_volume}},
+            on: ["ticker"],
+        )
+        second_join = join(
+            tables: {{tweet_sentiment:tweet_sentiment, tweet_count:tweet_count}},
+            on: ["ticker"],
+        )
+
+        join(
+            tables: {{first:first_join, second:second_join}},
+            on: ["ticker"],
+        )
+    '''
+
+    data = influxdb.query_data(query)
+
+    res = []
+    for item in data[0].records:
+        new_item = {
+            "ticker": ticker,
+            "coin_price": item["_value_after_trade_price"],
+            "coin_volume": item["_value_after_trade_volume"],
+            "tweet_count": item["_value_after_tweet_count"],
+            "tweet_sentiment": item["_value_after_tweet_sentiment"],
+            "coin_price_percentage": item["_value_trade_price"],
+            "coin_volume_percentage": item["_value_trade_volume"],
+            "tweet_count_percentage": item["_value_tweet_count"],
+            "tweet_sentiment_percentage": item["_value_tweet_sentiment"],
+        }
+        res.append(new_item)
+
+
+    return { "payload": res }
