@@ -37,8 +37,11 @@ class TimeGranularity(str, Enum):
     FIFTEEN_MINUTE = "15m"
     HOUR = "1h"
     DAY = "1d"
+    TWO_DAYS = "2d"
     WEEK = "7d"
+    TWO_WEEKS = "14d"
     MONTH = "mo"
+    TWO_MONTHS = "2mo"
 
 class Ticker(str, Enum):
     BTC = "BTC"
@@ -157,12 +160,13 @@ async def tweet_volume_and_sentiment(
 
     res = []
     for item in data[0].records:
-        if item["_value_mean"] >= 45 and item["_value_mean"] <= 55:
-            tweet_sentiment = "neutral"
-        elif item["_value_mean"] < 45:
-            tweet_sentiment = "negative"
-        elif item["_value_mean"] > 55:
-            tweet_sentiment = "positive"
+        try:
+            if item["_value_mean"] <= 50:
+                tweet_sentiment = "negative"
+            elif item["_value_mean"] > 50:
+                tweet_sentiment = "positive"
+        except:
+            tweet_sentiment = ""
 
         new_item = {
             "ticker": item["ticker"],
