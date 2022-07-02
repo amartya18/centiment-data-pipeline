@@ -70,7 +70,7 @@ async def candlestick(
     res = []
     for item in data[0].records:
         new_item = {
-            "ticker": "BTC",
+            "ticker": item["ticker"],
             "time": item["_time"],
             "low_price": item["low_price"],
             "open_price": item["open_price"],
@@ -112,7 +112,7 @@ async def candlestick_relative(
     res = []
     for item in data[0].records:
         new_item = {
-            "ticker": "BTC",
+            "ticker": item["ticker"],
             "time": item["_time"],
             "low_price": item["low_price"],
             "open_price": item["open_price"],
@@ -123,6 +123,7 @@ async def candlestick_relative(
 
     return { "payload": res }
 
+# TODO: if null error bcs of converting
 @app.get("/tweet-volume-sentiment")
 async def tweet_volume_and_sentiment(
     relative_time: RelativeTime = RelativeTime.SEVEN_DAYS,
@@ -174,7 +175,7 @@ async def tweet_volume_and_sentiment(
         }
         res.append(new_item)
 
-    return { "payload" : res }
+    return { "payload": res }
 
 @app.get("/coin-sentiment-comparison")
 async def coin_sentiment_comparison(
@@ -199,7 +200,7 @@ async def coin_sentiment_comparison(
             }
             res.append(new_item)
 
-    return { "payload" : res }
+    return { "payload": res }
 
 class TwitteSentimentTestText(BaseModel):
     text: str
@@ -210,4 +211,78 @@ async def twitter_sentiment_test(
 ):
     res = vader_sentiment.get_polarity(text.text)
 
-    return { "payload" : res }
+    return { "payload": res }
+
+@app.get("/tweet-trade-correlation")
+async def tweet_trade_correlation(
+    relative_time: RelativeTime = RelativeTime.SEVEN_DAYS,
+    ticker: Ticker = Ticker.BTC,
+):
+    # granularity based on time_relative
+    granularity = TimeGranularity.DAY
+    if relative_time == RelativeTime.ONE_DAY:
+        granularity = TimeGranularity.HOUR
+    elif relative_time == RelativeTime.ONE_MONTH:
+        granularity = TimeGranularity.WEEK
+
+    query = f' trade_volume = from(bucket: "centiment-bucket-test")\
+	|> range(start: -{relative_time})\
+    |> filter(fn: (r) => r["_measurement"] == "ohlc")\
+    |> filter(fn: (r) => r["_field"] == "volume")\
+    |> filter(fn: (r) => r["ticker"] == "{ticker}")\
+    |> aggregateWindow(every: {granularity}, fn: mean)\
+    trade_volume_max = trade_volume\
+    |> max()\
+    |> findColumn(\
+        fn: (key) => key._field == "volume",\
+        column: "_value",\
+    )\
+    trade_volume_percentage = trade_volume\
+    |> map(\
+        fn: (r) => ({{\
+            _time: r._time,\
+            _measurement: r._measurement,\
+            _field: "trade_volume_percent",\
+            _value: float(v: r._value) / float(v: trade_volume_max[0]) * 100.0\
+        }}),\
+    )\
+    tweet_volume = from(bucket: "centiment-bucket-test")\
+	|> range(start: -{relative_time})\
+    |> filter(fn: (r) => r["_measurement"] == "tweet_sentiment")\
+    |> filter(fn: (r) => r["_field"] == "sentiment")\
+    |> filter(fn: (r) => r["ticker"] == "{ticker}")\
+    |> aggregateWindow(every: {granularity}, fn: count)\
+    tweet_volume_max = tweet_volume\
+    |> max()\
+    |> findColumn(\
+        fn: (key) => key._field == "sentiment",\
+        column: "_value",\
+    )\
+    tweet_volume_percentage = tweet_volume\
+    |> map(\
+        fn: (r) => ({{\
+            _time: r._time,\
+            _measurement: r._measurement,\
+            _field: "tweet_volume_percent",\
+            _value: float(v: r._value) / float(v: tweet_volume_max[0]) * 100.0\
+        }}),\
+    )\
+    join(\
+        tables: {{trade:trade_volume_percentage, tweet:tweet_volume_percentage}},\
+        on: ["_time"],\
+    )'
+
+    data = influxdb.query_data(query)
+
+    res = []
+    for item in data[0].records:
+        new_item = {
+            "ticker": ticker,
+            "time": item["_time"],
+            "trade_volume_percentage": item["_value_trade"],
+            "tweet_volume_percentage": item["_value_tweet"],
+        }
+        res.append(new_item)
+
+
+    return { "payload": res }
