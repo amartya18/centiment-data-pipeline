@@ -390,16 +390,91 @@ async def coin_general_information(
     for item in data[0].records:
         new_item = {
             "ticker": ticker,
-            "coin_price": item["_value_after_trade_price"],
-            "coin_volume": item["_value_after_trade_volume"],
+            "coin_price": round(item["_value_after_trade_price"], 3),
+            "coin_volume": round(item["_value_after_trade_volume"], 2),
             "tweet_count": item["_value_after_tweet_count"],
-            "tweet_sentiment": item["_value_after_tweet_sentiment"],
-            "coin_price_percentage": item["_value_trade_price"],
-            "coin_volume_percentage": item["_value_trade_volume"],
-            "tweet_count_percentage": item["_value_tweet_count"],
-            "tweet_sentiment_percentage": item["_value_tweet_sentiment"],
+            "tweet_sentiment": round(item["_value_after_tweet_sentiment"], 2),
+            "coin_price_percentage": round(item["_value_trade_price"], 2),
+            "coin_volume_percentage": round(item["_value_trade_volume"], 2),
+            "tweet_count_percentage": round(item["_value_tweet_count"], 2),
+            "tweet_sentiment_percentage": round(item["_value_tweet_sentiment"], 2),
         }
         res.append(new_item)
 
+
+    return { "payload": res }
+
+@app.get("/all-coin-information")
+async def all_coin_information():
+    res = []
+    for item in Ticker:
+        coin = await coin_general_information(item.value)
+        res.append(coin["payload"])
+
+    print(res)
+
+    return { "payload": res }
+
+@app.get("/twitter-fear-greed")
+async def twitter_fear_greed(
+    ticker: Ticker = Ticker.BTC,
+):
+    query = f'''
+        now = from(bucket: "centiment-bucket-test")
+            |> range(start: -1d)
+            |> filter(fn: (r) => r["_measurement"] == "tweet_sentiment")
+            |> filter(fn: (r) => r["_field"] == "sentiment")
+            |> filter(fn: (r) => r["ticker"] == "{ticker}")
+            |> mean()
+
+        yesterday = from(bucket: "centiment-bucket-test")
+            |> range(start: -2d, stop: -1d)
+            |> filter(fn: (r) => r["_measurement"] == "tweet_sentiment")
+            |> filter(fn: (r) => r["_field"] == "sentiment")
+            |> filter(fn: (r) => r["ticker"] == "{ticker}")
+            |> mean()
+
+        last_week = from(bucket: "centiment-bucket-test")
+            |> range(start: -7d)
+            |> filter(fn: (r) => r["_measurement"] == "tweet_sentiment")
+            |> filter(fn: (r) => r["_field"] == "sentiment")
+            |> filter(fn: (r) => r["ticker"] == "{ticker}")
+            |> mean()
+
+        last_month = from(bucket: "centiment-bucket-test")
+            |> range(start: -1mo)
+            |> filter(fn: (r) => r["_measurement"] == "tweet_sentiment")
+            |> filter(fn: (r) => r["_field"] == "sentiment")
+            |> filter(fn: (r) => r["ticker"] == "{ticker}")
+            |> mean()
+
+        first_join = join(
+            tables: {{now:now, yesterday:yesterday}},
+            on: ["ticker", "_field", "_measurement"],
+        )
+
+        second_join = join(
+            tables: {{last_week:last_week, last_month:last_month}},
+            on: ["ticker", "_field", "_measurement"],
+        )
+
+        join(
+            tables: {{first:first_join, second:second_join}},
+            on: ["ticker", "_field", "_measurement"],
+        )
+    '''
+
+    data = influxdb.query_data(query)
+
+    res = []
+    for item in data[0].records:
+        new_item = {
+            "ticker": item["ticker"],
+            "last_month": int(item["_value_last_month"]),
+            "last_week": int(item["_value_last_week"]),
+            "now": int(item["_value_now"]),
+            "yesterday": int(item["_value_yesterday"]),
+        }
+        res.append(new_item)
 
     return { "payload": res }
