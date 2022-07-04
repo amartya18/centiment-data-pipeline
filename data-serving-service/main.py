@@ -77,7 +77,7 @@ async def candlestick(
         }
         res.append(new_item)
 
-    return { "payload": res }
+    return { "code": 200, "payload": res }
 
 class RelativeTime(str, Enum):
     ONE_DAY = "1d"
@@ -150,7 +150,7 @@ async def candlestick_relative(
         }
         res.append(new_item)
 
-    return { "payload": res }
+    return { "code": 200, "payload": res }
 
 # TODO: if null error bcs of converting
 @app.get("/tweet-volume-sentiment")
@@ -205,7 +205,7 @@ async def tweet_volume_and_sentiment(
         }
         res.append(new_item)
 
-    return { "payload": res }
+    return { "code": 200, "payload": res }
 
 @app.get("/coin-sentiment-comparison")
 async def coin_sentiment_comparison(
@@ -223,14 +223,13 @@ async def coin_sentiment_comparison(
     res = []
     for table in data:
         for item in table.records:
-            print(item)
             new_item = {
                 "ticker": item["ticker"],
                 "tweet_sentiment": item["_value"]
             }
             res.append(new_item)
 
-    return { "payload": res }
+    return { "code": 200, "payload": res }
 
 class TwitteSentimentTestText(BaseModel):
     text: str
@@ -241,7 +240,7 @@ async def twitter_sentiment_test(
 ):
     res = vader_sentiment.get_polarity(text.text)
 
-    return { "payload": res }
+    return { "code": 200, "payload": res }
 
 @app.get("/tweet-trade-correlation")
 async def tweet_trade_correlation(
@@ -315,7 +314,7 @@ async def tweet_trade_correlation(
         res.append(new_item)
 
 
-    return { "payload": res }
+    return { "code": 200, "payload": res }
 
 @app.get("/coin-general-information")
 async def coin_general_information(
@@ -425,7 +424,7 @@ async def coin_general_information(
         "tweet_sentiment_percentage": round(item["_value_tweet_sentiment"], 2),
     }
 
-    return { "payload": res }
+    return { "code": 200, "payload": res }
 
 @app.get("/all-coin-information")
 async def all_coin_information():
@@ -434,9 +433,7 @@ async def all_coin_information():
         coin = await coin_general_information(item.value)
         res.append(coin["payload"])
 
-    print(res)
-
-    return { "payload": res }
+    return { "code": 200, "payload": res }
 
 @app.get("/twitter-fear-greed")
 async def twitter_fear_greed(
@@ -500,7 +497,7 @@ async def twitter_fear_greed(
         }
         res.append(new_item)
 
-    return { "payload": res }
+    return { "code": 200, "payload": res }
 
 @app.get("/tweet-trending-coins")
 async def tweet_trending_coins():
@@ -556,4 +553,33 @@ async def tweet_trending_coins():
 
     res = sorted(combined_tweet_volume, key = lambda x: x["percentage"], reverse = True)[:-4]
 
-    return { "payload": res }
+    return { "code": 200, "payload": res }
+
+@app.get("/recent-tweets-sentiment")
+async def recent_tweets_sentiment():
+    query = '''
+        from(bucket: "centiment-bucket-test")
+            |> range(start: -5m)
+            |> filter(fn: (r) => r["_measurement"] == "tweet_sentiment")
+            |> filter(fn: (r) => r["_field"] == "name" or r["_field"] == "sentiment" or r["_field"] == "tweet" or r["_field"] == "username" or r["_field"] == "tweet_id")
+            |> pivot(rowKey: ["_time", "_start", "_stop", "_measurement"], columnKey: ["_field"], valueColumn: "_value")
+    '''
+
+    data = influxdb.query_data(query)
+
+    tweets = []
+    for table in data:
+        for item in table.records:
+            tweets.append({
+                "ticker": item["ticker"],
+                "username": item["username"],
+                "name": item["name"],
+                "tweet": item["tweet"],
+                "tweet_id": item["tweet_id"],
+                "time": item["_time"],
+                "sentiment": item["sentiment"],
+            })
+
+    tweets.sort(key=lambda x: x["time"], reverse = True)
+
+    return { "code": 200, "payload": tweets }
