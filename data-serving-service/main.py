@@ -143,10 +143,10 @@ async def candlestick_relative(
         new_item = {
             "ticker": item["ticker"],
             "time": item["_time"],
-            "low_price": item["_value_low"],
-            "open_price": item["_value_open"],
-            "close_price": item["_value_close"],
-            "high_price": item["_value_high"]
+            "low_price": replaceNullWithZero(item["_value_low"]),
+            "open_price": replaceNullWithZero(item["_value_open"]),
+            "close_price": replaceNullWithZero(item["_value_close"]),
+            "high_price": replaceNullWithZero(item["_value_high"])
         }
         res.append(new_item)
 
@@ -583,3 +583,9 @@ async def recent_tweets_sentiment():
     tweets.sort(key=lambda x: x["time"], reverse = True)
 
     return { "code": 200, "payload": tweets }
+
+def replaceNullWithZero(num):
+    if num == None:
+        return 0
+    else:
+        return num
