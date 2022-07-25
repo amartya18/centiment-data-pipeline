@@ -556,12 +556,17 @@ async def tweet_trending_coins():
     return { "code": 200, "payload": res }
 
 @app.get("/recent-tweets-sentiment")
-async def recent_tweets_sentiment():
-    query = '''
+async def recent_tweets_sentiment(
+    ticker: Ticker = Ticker.BTC,
+):
+    query = f'''
         from(bucket: "centiment-bucket-test")
-            |> range(start: -5m)
+            |> range(start: -1d)
             |> filter(fn: (r) => r["_measurement"] == "tweet_sentiment")
             |> filter(fn: (r) => r["_field"] == "name" or r["_field"] == "sentiment" or r["_field"] == "tweet" or r["_field"] == "username" or r["_field"] == "tweet_id")
+            |> filter(fn: (r) => r["ticker"] == "{ticker}")
+            |> sort(columns: ["_time"], desc: true)
+            |> limit(n: 23)
             |> pivot(rowKey: ["_time", "_start", "_stop", "_measurement"], columnKey: ["_field"], valueColumn: "_value")
     '''
 
