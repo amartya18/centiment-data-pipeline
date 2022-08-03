@@ -1,5 +1,9 @@
 # centiment-data-pipeline
 
-Including this screenshot to remind me of the project high level architecture 🥸
+Centiment is a cryptocurrency monitoring platform offering market sentiment information formed based on tweets from Twitter.
 
-![High level architecture](/docs/high-level-architecture.jpg)
+![Dashboard Preview](/docs/dashboard-preview.png)
+
+### High Level Architecture
+
+![High level architecture](/docs/high-level-architecture.png)
